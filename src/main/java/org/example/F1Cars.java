@@ -1,12 +1,14 @@
 package org.example;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.Random;
 
 /**
  * Поток болида
  */
+@Log4j2
 public class F1Cars extends Thread implements Comparable<F1Cars> {
 
     /**
@@ -54,6 +56,9 @@ public class F1Cars extends Thread implements Comparable<F1Cars> {
         super("F1Car[" + carId + "]");
         this.carId = carId;
         this.pitStop = pitStop;
+        for (int i = 0; i < wheels.length; i++) {
+            wheels[i] = new Wheel();
+        }
         random = new Random();
 
     }
@@ -66,6 +71,7 @@ public class F1Cars extends Thread implements Comparable<F1Cars> {
     public void prepareRace(Race race) {
         this.race = race;
         this.targetDistance = race.getDistance();
+        race.register(this);
         this.start();
     }
 
@@ -78,6 +84,11 @@ public class F1Cars extends Thread implements Comparable<F1Cars> {
     @Override
     public void run() {
         // TODO дожидаемся старта гонки
+        try {
+            race.getStart().await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         race.start(this);
         while (currentDistance < targetDistance) {
             moveToTarget();
